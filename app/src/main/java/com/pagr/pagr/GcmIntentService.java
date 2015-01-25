@@ -27,6 +27,7 @@ import android.media.RingtoneManager;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.NotificationCompat;
+import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 
 /**
@@ -61,6 +62,8 @@ public class GcmIntentService extends IntentService {
             if (GoogleCloudMessaging.MESSAGE_TYPE_MESSAGE.equals(messageType)) {
                 // Post notification of received message.
                 sendNotification(extras);
+                Intent localBroadcast = new Intent(DemoActivity.ACTION);
+                LocalBroadcastManager.getInstance(this).sendBroadcast(localBroadcast);
                 Log.i(TAG, "Received: " + extras.toString());
             }
         }

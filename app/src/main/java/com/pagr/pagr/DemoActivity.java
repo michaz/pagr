@@ -17,16 +17,19 @@ package com.pagr.pagr;
 
 import android.app.Activity;
 import android.app.PendingIntent;
+import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager.NameNotFoundException;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.support.v4.content.LocalBroadcastManager;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.util.Log;
 import android.view.View;
-import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.ListAdapter;
 import android.widget.ListView;
@@ -55,6 +58,7 @@ public class DemoActivity extends Activity implements SwipeRefreshLayout.OnRefre
     public static final String PROPERTY_REG_ID = "registration_id";
     private static final String PROPERTY_APP_VERSION = "appVersion";
     private static final int PLAY_SERVICES_RESOLUTION_REQUEST = 9000;
+    public static final String ACTION = "wurst";
 
     /**
      * Substitute you own sender ID here. This is the project number you got
@@ -73,6 +77,13 @@ public class DemoActivity extends Activity implements SwipeRefreshLayout.OnRefre
     String regId;
     ListView alarmList;
     private SwipeRefreshLayout swipeLayout;
+    private BroadcastReceiver updateList = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            swipeLayout.setRefreshing(true);
+            onRefresh();
+        }
+    };
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -106,6 +117,15 @@ public class DemoActivity extends Activity implements SwipeRefreshLayout.OnRefre
         checkPlayServices();
         swipeLayout.setRefreshing(true);
         onRefresh();
+        IntentFilter filter = new IntentFilter();
+        filter.addAction(ACTION);
+        LocalBroadcastManager.getInstance(this).registerReceiver(updateList, filter);
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        LocalBroadcastManager.getInstance(this).unregisterReceiver(updateList);
     }
 
     /**
@@ -210,11 +230,6 @@ public class DemoActivity extends Activity implements SwipeRefreshLayout.OnRefre
             }
 
         }.execute(null, null, null);
-    }
-
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
     }
 
     /**
