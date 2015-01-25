@@ -94,11 +94,10 @@ public class GcmIntentService extends IntentService {
                         .setSound(ringtone)
                         .setVibrate(new long[]{500, 500})
                         .setSmallIcon(R.drawable.ic_stat_gcm)
-                        .setContentTitle("Alarm")
-                        .setStyle(new NotificationCompat.BigTextStyle().bigText(message))
+                        .setContentTitle(getString(R.string.alarm))
                         .setContentText(message)
-                        .addAction(R.drawable.ic_action_accept, getString(R.string.accept), acceptIntent)
-                        .addAction(R.drawable.ic_action_cancel, getString(R.string.decline), rejectIntent)
+                        .addAction(R.drawable.ic_action_accept, getString(R.string.ichkomme), acceptIntent)
+                        .addAction(R.drawable.ic_action_cancel, getString(R.string.ichkommenicht), rejectIntent)
                         .setContentIntent(contentIntent)
                         .setAutoCancel(true);
         mNotificationManager.notify(alarmId.intValue(), mBuilder.build());
