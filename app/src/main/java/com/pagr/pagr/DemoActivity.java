@@ -38,9 +38,9 @@ import android.widget.SimpleAdapter;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GooglePlayServicesUtil;
 import com.google.android.gms.gcm.GoogleCloudMessaging;
-import com.pagr.backend.messaging.Messaging;
-import com.pagr.backend.messaging.model.Alarm;
-import com.pagr.backend.messaging.model.RegistrationRecord;
+import com.pagr.backend.pagr.Pagr;
+import com.pagr.backend.pagr.model.Alarm;
+import com.pagr.backend.pagr.model.RegistrationRecord;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -269,7 +269,7 @@ public class DemoActivity extends Activity implements SwipeRefreshLayout.OnRefre
 
         @Override
         protected List<Alarm> doInBackground(Void... params) {
-            Messaging messaging = AcceptRejectService.create();
+            Pagr messaging = AcceptRejectService.create();
             try {
                 return messaging.alarms().list().execute().getItems();
             } catch (IOException e) {

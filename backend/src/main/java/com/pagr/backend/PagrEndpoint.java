@@ -27,31 +27,18 @@ import javax.inject.Named;
 
 import static com.pagr.backend.OfyService.ofy;
 
-/**
- * An endpoint to send messages to devices registered with the backend
- * <p/>
- * For more information, see
- * https://developers.google.com/appengine/docs/java/endpoints/
- * <p/>
- * NOTE: This endpoint does not use any form of authorization or
- * authentication! If this app is deployed, anyone can access this endpoint! If
- * you'd like to add authentication, take a look at the documentation.
- */
-@Api(name = "messaging", version = "v1", namespace = @ApiNamespace(ownerDomain = "backend.pagr.com", ownerName = "backend.pagr.com", packagePath = ""))
-public class MessagingEndpoint {
-    private static final Logger log = Logger.getLogger(MessagingEndpoint.class.getName());
+@Api(name = "pagr", version = "v1", namespace = @ApiNamespace(ownerDomain = "backend.pagr.com", ownerName = "backend.pagr.com", packagePath = ""))
+public class PagrEndpoint {
+    private static final Logger log = Logger.getLogger(PagrEndpoint.class.getName());
 
-    /**
-     * Api Keys can be obtained from the google cloud console
-     */
     private static final String API_KEY = System.getProperty("gcm.api.key");
 
-    /**
-     * Send to the first 10 devices (You can modify this to send to any number of devices or a specific device)
-     *
-     * @param message The message to send
-     */
-    public void sendMessage(@Named("message") String message) throws IOException {
+    @ApiMethod(
+            name = "alarms.post",
+            path = "alarms/post",
+            httpMethod = ApiMethod.HttpMethod.POST
+    )
+    public void postAlarm(@Named("message") String message) throws IOException {
         if (message == null || message.trim().length() == 0) {
             log.warning("Not sending message because it is empty");
             return;
@@ -94,7 +81,7 @@ public class MessagingEndpoint {
     )
     public void postStatus(@Named("id") long alarmId, @Named("regId") String regId) throws IOException {
         Alarm alarm = ofy().load().key(Key.create(Alarm.class, alarmId)).now();
-        RegistrationRecord registrationRecord = RegistrationEndpoint.findRecord(regId);
+        RegistrationRecord registrationRecord = findRecord(regId);
         alarm.getPendingReplies().remove(Ref.create(registrationRecord));
         ofy().save().entity(alarm).now();
         notifyDataChanged(registrationRecord);
@@ -140,5 +127,52 @@ public class MessagingEndpoint {
                 log.warning("Error when sending message : " + error);
             }
         }
+    }
+
+    /**
+     * Register a device to the backend
+     *
+     * @param regId The Google Cloud Messaging registration Id to add
+     */
+    @ApiMethod(name = "devices.register")
+    public void registerDevice(@Named("regId") String regId) {
+        if (findRecord(regId) != null) {
+            log.info("Device " + regId + " already registered, skipping register");
+            return;
+        }
+        RegistrationRecord record = new RegistrationRecord();
+        record.setRegId(regId);
+        ofy().save().entity(record).now();
+    }
+
+    /**
+     * Unregister a device from the backend
+     *
+     * @param regId The Google Cloud Messaging registration Id to remove
+     */
+    @ApiMethod(name = "devices.unregister")
+    public void unregisterDevice(@Named("regId") String regId) {
+        RegistrationRecord record = findRecord(regId);
+        if (record == null) {
+            log.info("Device " + regId + " not registered, skipping unregister");
+            return;
+        }
+        ofy().delete().entity(record).now();
+    }
+
+    /**
+     * Return a collection of registered devices
+     *
+     * @param count The number of devices to list
+     * @return a list of Google Cloud Messaging registration Ids
+     */
+    @ApiMethod(name = "devices.list")
+    public CollectionResponse<RegistrationRecord> listDevices(@Named("count") int count) {
+        List<RegistrationRecord> records = ofy().load().type(RegistrationRecord.class).limit(count).list();
+        return CollectionResponse.<RegistrationRecord>builder().setItems(records).build();
+    }
+
+    static RegistrationRecord findRecord(String regId) {
+        return ofy().load().type(RegistrationRecord.class).filter("regId", regId).first().now();
     }
 }

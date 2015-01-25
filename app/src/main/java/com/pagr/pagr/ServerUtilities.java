@@ -22,7 +22,7 @@ import com.google.api.client.extensions.android.http.AndroidHttp;
 import com.google.api.client.extensions.android.json.AndroidJsonFactory;
 import com.google.api.client.googleapis.services.AbstractGoogleClientRequest;
 import com.google.api.client.googleapis.services.GoogleClientRequestInitializer;
-import com.pagr.backend.registration.Registration;
+import com.pagr.backend.pagr.Pagr;
 
 import java.io.IOException;
 
@@ -34,10 +34,10 @@ import static com.pagr.pagr.CommonUtilities.displayMessage;
  */
 public final class ServerUtilities {
 
-    private Registration registrationService;
+    private Pagr registrationService;
 
     public ServerUtilities() {
-        Registration.Builder builder = new Registration.Builder(
+        Pagr.Builder builder = new Pagr.Builder(
                 AndroidHttp.newCompatibleTransport(),
                 new AndroidJsonFactory(), null)
                 .setRootUrl("https://pagrff.appspot.com/_ah/api/")
@@ -60,7 +60,7 @@ public final class ServerUtilities {
         Log.i(TAG, "registering device (regId = " + regId + ")");
         try {
             displayMessage(context, context.getString(R.string.server_registering));
-            registrationService.register(regId).execute();
+            registrationService.devices().register(regId).execute();
             String message = context.getString(R.string.server_registered);
             CommonUtilities.displayMessage(context, message);
         } catch (IOException e) {
@@ -75,7 +75,7 @@ public final class ServerUtilities {
     void unregister(final Context context, final String regId) {
         Log.i(TAG, "unregistering device (regId = " + regId + ")");
         try {
-            registrationService.unregister(regId);
+            registrationService.devices().unregister(regId);
             String message = context.getString(R.string.server_unregistered);
             CommonUtilities.displayMessage(context, message);
         } catch (IOException e) {

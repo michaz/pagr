@@ -11,21 +11,21 @@ import com.google.api.client.extensions.android.http.AndroidHttp;
 import com.google.api.client.extensions.android.json.AndroidJsonFactory;
 import com.google.api.client.googleapis.services.AbstractGoogleClientRequest;
 import com.google.api.client.googleapis.services.GoogleClientRequestInitializer;
-import com.pagr.backend.messaging.Messaging;
+import com.pagr.backend.pagr.Pagr;
 
 import java.io.IOException;
 
 public class AcceptRejectService extends IntentService {
 
-    private final Messaging service;
+    private final Pagr service;
 
     public AcceptRejectService() {
         super(AcceptRejectService.class.getName());
         service = create();
     }
 
-    public static Messaging create() {
-        return new Messaging.Builder(
+    public static Pagr create() {
+        return new Pagr.Builder(
                 AndroidHttp.newCompatibleTransport(),
                 new AndroidJsonFactory(), null)
                 .setRootUrl("https://pagrff.appspot.com/_ah/api/")
