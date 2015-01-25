@@ -15,10 +15,6 @@
  */
 package com.pagr.pagr;
 
-import com.google.android.gms.common.ConnectionResult;
-import com.google.android.gms.common.GooglePlayServicesUtil;
-import com.google.android.gms.gcm.GoogleCloudMessaging;
-
 import android.app.Activity;
 import android.content.Context;
 import android.content.SharedPreferences;
@@ -27,18 +23,28 @@ import android.content.pm.PackageManager.NameNotFoundException;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.util.Log;
-import android.view.View;
-import android.widget.TextView;
+import android.widget.ListAdapter;
+import android.widget.ListView;
+import android.widget.SimpleAdapter;
+
+import com.google.android.gms.common.ConnectionResult;
+import com.google.android.gms.common.GooglePlayServicesUtil;
+import com.google.android.gms.gcm.GoogleCloudMessaging;
+import com.pagr.backend.messaging.Messaging;
+import com.pagr.backend.messaging.model.Alarm;
 
 import java.io.IOException;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Main UI for the demo app.
  */
 public class DemoActivity extends Activity {
 
-    public static final String EXTRA_MESSAGE = "message";
     public static final String PROPERTY_REG_ID = "registration_id";
     private static final String PROPERTY_APP_VERSION = "appVersion";
     private static final int PLAY_SERVICES_RESOLUTION_REQUEST = 9000;
@@ -54,27 +60,28 @@ public class DemoActivity extends Activity {
      */
     static final String TAG = "GCM Demo";
 
-    TextView mDisplay;
     GoogleCloudMessaging gcm;
-    AtomicInteger msgId = new AtomicInteger();
     Context context;
 
-    String regid;
+    String regId;
+    ListView alarmList;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
         setContentView(R.layout.main);
-        mDisplay = (TextView) findViewById(R.id.display);
-
         context = getApplicationContext();
+        register();
+        alarmList = (ListView) findViewById(R.id.list_alarms);
+        new ListRetriever().execute();
+    }
 
+    private void register() {
         // Check device for Play Services APK. If check succeeds, proceed with GCM registration.
         if (checkPlayServices()) {
             gcm = GoogleCloudMessaging.getInstance(this);
-            regid = getRegistrationId(context);
-            if (regid.isEmpty()) {
+            regId = getRegistrationId(context);
+            if (regId.isEmpty()) {
                 registerInBackground();
             }
         } else {
@@ -117,13 +124,13 @@ public class DemoActivity extends Activity {
      * @param regId registration ID
      */
     private void storeRegistrationId(Context context, String regId) {
-        final SharedPreferences prefs = getGcmPreferences(context);
+        final SharedPreferences prefs = getGcmPreferences();
         int appVersion = getAppVersion(context);
         Log.i(TAG, "Saving regId on app version " + appVersion);
         SharedPreferences.Editor editor = prefs.edit();
         editor.putString(PROPERTY_REG_ID, regId);
         editor.putInt(PROPERTY_APP_VERSION, appVersion);
-        editor.commit();
+        editor.apply();
     }
 
     /**
@@ -135,7 +142,7 @@ public class DemoActivity extends Activity {
      *         registration ID.
      */
     private String getRegistrationId(Context context) {
-        final SharedPreferences prefs = getGcmPreferences(context);
+        final SharedPreferences prefs = getGcmPreferences();
         String registrationId = prefs.getString(PROPERTY_REG_ID, "");
         if (registrationId.isEmpty()) {
             Log.i(TAG, "Registration not found.");
@@ -163,13 +170,13 @@ public class DemoActivity extends Activity {
         new AsyncTask<Void, Void, String>() {
             @Override
             protected String doInBackground(Void... params) {
-                String msg = "";
+                String msg;
                 try {
                     if (gcm == null) {
                         gcm = GoogleCloudMessaging.getInstance(context);
                     }
-                    regid = gcm.register(SENDER_ID);
-                    msg = "Device registered, registration ID=" + regid;
+                    regId = gcm.register(SENDER_ID);
+                    msg = "Device registered, registration ID=" + regId;
 
                     // You should send the registration ID to your server over HTTP, so it
                     // can use GCM/HTTP or CCS to send messages to your app.
@@ -180,7 +187,7 @@ public class DemoActivity extends Activity {
                     // 'from' address in the message.
 
                     // Persist the regID - no need to register again.
-                    storeRegistrationId(context, regid);
+                    storeRegistrationId(context, regId);
                 } catch (IOException ex) {
                     msg = "Error :" + ex.getMessage();
                     // If there is an error, don't just keep trying to register.
@@ -190,42 +197,7 @@ public class DemoActivity extends Activity {
                 return msg;
             }
 
-            @Override
-            protected void onPostExecute(String msg) {
-                mDisplay.append(msg + "\n");
-            }
         }.execute(null, null, null);
-    }
-
-    // Send an upstream message.
-    public void onClick(final View view) {
-
-        if (view == findViewById(R.id.send)) {
-            new AsyncTask<Void, Void, String>() {
-                @Override
-                protected String doInBackground(Void... params) {
-                    String msg = "";
-                    try {
-                        Bundle data = new Bundle();
-                        data.putString("my_message", "Hello World");
-                        data.putString("my_action", "com.pagr.pagr.ECHO_NOW");
-                        String id = Integer.toString(msgId.incrementAndGet());
-                        gcm.send(SENDER_ID + "@gcm.googleapis.com", id, data);
-                        msg = "Sent message";
-                    } catch (IOException ex) {
-                        msg = "Error :" + ex.getMessage();
-                    }
-                    return msg;
-                }
-
-                @Override
-                protected void onPostExecute(String msg) {
-                    mDisplay.append(msg + "\n");
-                }
-            }.execute(null, null, null);
-        } else if (view == findViewById(R.id.clear)) {
-            mDisplay.setText("");
-        }
     }
 
     @Override
@@ -247,10 +219,7 @@ public class DemoActivity extends Activity {
         }
     }
 
-    /**
-     * @return Application's {@code SharedPreferences}.
-     */
-    private SharedPreferences getGcmPreferences(Context context) {
+    private SharedPreferences getGcmPreferences() {
         // This sample app persists the registration ID in shared preferences, but
         // how you store the regID in your app is up to you.
         return getSharedPreferences(DemoActivity.class.getSimpleName(),
@@ -261,6 +230,37 @@ public class DemoActivity extends Activity {
      * messages to your app.
      */
     private void sendRegistrationIdToBackend() {
-        new ServerUtilities().register(getApplicationContext(), regid);
+        new ServerUtilities().register(getApplicationContext(), regId);
+    }
+
+    private class ListRetriever extends AsyncTask<Void, Void, Collection<Alarm>> {
+
+        @Override
+        protected Collection<Alarm> doInBackground(Void... params) {
+            Messaging messaging = AcceptRejectService.create();
+            try {
+                return messaging.alarms().list().execute().getItems();
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        }
+
+        @Override
+        @SuppressWarnings("null")
+        protected void onPostExecute(Collection<Alarm> result) {
+            alarmList.setAdapter(createListAdapter(result));
+        }
+
+        private ListAdapter createListAdapter(Collection<Alarm> result) {
+            List<Map<String,Object>> data = new ArrayList<>();
+            for (Alarm alarm : result) {
+                Map<String,Object> element = new HashMap<>();
+                element.put("message", alarm.getMessage());
+                element.put("alarmDate", alarm.getAlarmDate());
+                data.add(element);
+            }
+            return new SimpleAdapter(DemoActivity.this, data, R.layout.alarmlistitem,
+                    new String[]{"alarmDate", "message"}, new int[]{R.id.alarmlistitem_date, R.id.alarmlistitem_message});
+        }
     }
 }

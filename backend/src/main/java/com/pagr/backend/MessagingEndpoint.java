@@ -13,10 +13,12 @@ import com.google.android.gcm.server.Sender;
 import com.google.api.server.spi.config.Api;
 import com.google.api.server.spi.config.ApiMethod;
 import com.google.api.server.spi.config.ApiNamespace;
+import com.google.api.server.spi.response.CollectionResponse;
 import com.googlecode.objectify.Key;
 import com.googlecode.objectify.Ref;
 
 import java.io.IOException;
+import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 import java.util.logging.Logger;
@@ -74,6 +76,15 @@ public class MessagingEndpoint {
     )
     public Alarm getAlarm(@Named("id") long id) {
         return ofy().load().key(Key.create(Alarm.class, id)).now();
+    }
+
+    @ApiMethod(
+            name = "alarms.list",
+            path = "alarms/list",
+            httpMethod = ApiMethod.HttpMethod.GET
+    )
+    public Collection<Alarm> listAlarms() {
+        return ofy().load().type(Alarm.class).list();
     }
 
     @ApiMethod(

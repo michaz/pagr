@@ -20,7 +20,11 @@ public class AcceptRejectService extends IntentService {
 
     public AcceptRejectService() {
         super(AcceptRejectService.class.getName());
-        service = new Messaging.Builder(
+        service = create();
+    }
+
+    public static Messaging create() {
+        return new Messaging.Builder(
                 AndroidHttp.newCompatibleTransport(),
                 new AndroidJsonFactory(), null)
                 .setRootUrl("https://pagrff.appspot.com/_ah/api/")

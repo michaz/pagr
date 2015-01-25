@@ -42,4 +42,8 @@ public class Alarm {
         return pendingReplies;
     }
 
+    public Long getId() {
+        return id;
+    }
+
 }
