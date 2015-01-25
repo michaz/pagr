@@ -28,7 +28,6 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.content.LocalBroadcastManager;
-import android.util.Log;
 
 /**
  * This {@code IntentService} does the actual handling of the GCM message.
@@ -60,21 +59,18 @@ public class GcmIntentService extends IntentService {
              * not interested in, or that you don't recognize.
              */
             if (GoogleCloudMessaging.MESSAGE_TYPE_MESSAGE.equals(messageType)) {
-                // Post notification of received message.
-                sendNotification(extras);
                 Intent localBroadcast = new Intent(DemoActivity.ACTION);
                 LocalBroadcastManager.getInstance(this).sendBroadcast(localBroadcast);
-                Log.i(TAG, "Received: " + extras.toString());
+                if (extras.getString("alarmId") != null) {
+                    sendAlarmNotification(extras);
+                }
             }
         }
         // Release the wake lock provided by the WakefulBroadcastReceiver.
         GcmBroadcastReceiver.completeWakefulIntent(intent);
     }
 
-    // Put the message into a notification and post it.
-    // This is just one simple example of what you might choose to do with
-    // a GCM message.
-    private void sendNotification(Bundle msg) {
+    private void sendAlarmNotification(Bundle msg) {
         String message = msg.getString("message");
         Long alarmId = Long.parseLong(msg.getString("alarmId"));
 
@@ -84,8 +80,8 @@ public class GcmIntentService extends IntentService {
         PendingIntent contentIntent = PendingIntent.getActivity(this, 0,
                 new Intent(this, DemoActivity.class), 0);
 
-        PendingIntent acceptIntent = AcceptRejectService.createIntent(this, alarmId);
-        PendingIntent rejectIntent = AcceptRejectService.createIntent(this, alarmId);
+        PendingIntent acceptIntent = AcceptRejectService.createIntent(this, alarmId, 0);
+        PendingIntent rejectIntent = AcceptRejectService.createIntent(this, alarmId, 1);
 
         Uri ringtone = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM);
 

@@ -40,10 +40,10 @@ public class AcceptRejectService extends IntentService {
                 ).build();
     }
 
-    public static PendingIntent createIntent(Context context, Long alarmId) {
+    public static PendingIntent createIntent(Context context, Long alarmId, int req) {
         Intent intent = new Intent(context, AcceptRejectService.class);
         intent.putExtra("alarmId", alarmId);
-        return PendingIntent.getService(context, 0, intent, PendingIntent.FLAG_CANCEL_CURRENT);
+        return PendingIntent.getService(context, req, intent, PendingIntent.FLAG_CANCEL_CURRENT);
     }
 
     @Override

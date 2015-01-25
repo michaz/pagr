@@ -316,7 +316,7 @@ public class DemoActivity extends Activity implements SwipeRefreshLayout.OnRefre
                                 @Override
                                 public void onClick(View v) {
                                     try {
-                                        AcceptRejectService.createIntent(DemoActivity.this, alarm.getId()).send();
+                                        AcceptRejectService.createIntent(DemoActivity.this, alarm.getId(), 0).send();
                                     } catch (PendingIntent.CanceledException e) {
                                         e.printStackTrace();
                                     }
@@ -327,7 +327,7 @@ public class DemoActivity extends Activity implements SwipeRefreshLayout.OnRefre
                                 @Override
                                 public void onClick(View v) {
                                     try {
-                                        AcceptRejectService.createIntent(DemoActivity.this, alarm.getId()).send();
+                                        AcceptRejectService.createIntent(DemoActivity.this, alarm.getId(), 0).send();
                                     } catch (PendingIntent.CanceledException e) {
                                         e.printStackTrace();
                                     }

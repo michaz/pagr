@@ -92,11 +92,18 @@ public class MessagingEndpoint {
             path = "alarms/{id}/status",
             httpMethod = ApiMethod.HttpMethod.POST
     )
-    public void postStatus(@Named("id") long alarmId, @Named("regId") String regId) {
+    public void postStatus(@Named("id") long alarmId, @Named("regId") String regId) throws IOException {
         Alarm alarm = ofy().load().key(Key.create(Alarm.class, alarmId)).now();
         RegistrationRecord registrationRecord = RegistrationEndpoint.findRecord(regId);
         alarm.getPendingReplies().remove(Ref.create(registrationRecord));
         ofy().save().entity(alarm).now();
+        notifyDataChanged(registrationRecord);
+    }
+
+    private void notifyDataChanged(RegistrationRecord registrationRecord) throws IOException {
+        Message msg = new Message.Builder().build();
+        Sender sender = new Sender(API_KEY);
+        sender.send(msg, registrationRecord.getRegId(), 5);
     }
 
     private void sendAll(Alarm alarm) throws IOException {
@@ -109,24 +116,28 @@ public class MessagingEndpoint {
         for (Ref<RegistrationRecord> recordRef : alarm.getPendingReplies()) {
             RegistrationRecord record = recordRef.get();
             Result result = sender.send(msg, record.getRegId(), 5);
-            if (result.getMessageId() != null) {
-                log.info("Message sent to " + record.getRegId());
-                String canonicalRegId = result.getCanonicalRegistrationId();
-                if (canonicalRegId != null) {
-                    // if the regId changed, we have to update the datastore
-                    log.info("Registration Id changed for " + record.getRegId() + " updating to " + canonicalRegId);
-                    record.setRegId(canonicalRegId);
-                    ofy().save().entity(record).now();
-                }
+            handleResult(record, result);
+        }
+    }
+
+    private void handleResult(RegistrationRecord record, Result result) {
+        if (result.getMessageId() != null) {
+            log.info("Message sent to " + record.getRegId());
+            String canonicalRegId = result.getCanonicalRegistrationId();
+            if (canonicalRegId != null) {
+                // if the regId changed, we have to update the datastore
+                log.info("Registration Id changed for " + record.getRegId() + " updating to " + canonicalRegId);
+                record.setRegId(canonicalRegId);
+                ofy().save().entity(record).now();
+            }
+        } else {
+            String error = result.getErrorCodeName();
+            if (error.equals(Constants.ERROR_NOT_REGISTERED)) {
+                log.warning("Registration Id " + record.getRegId() + " no longer registered with GCM, removing from datastore");
+                // if the device is no longer registered with Gcm, remove it from the datastore
+                ofy().delete().entity(record).now();
             } else {
-                String error = result.getErrorCodeName();
-                if (error.equals(Constants.ERROR_NOT_REGISTERED)) {
-                    log.warning("Registration Id " + record.getRegId() + " no longer registered with GCM, removing from datastore");
-                    // if the device is no longer registered with Gcm, remove it from the datastore
-                    ofy().delete().entity(record).now();
-                } else {
-                    log.warning("Error when sending message : " + error);
-                }
+                log.warning("Error when sending message : " + error);
             }
         }
     }
