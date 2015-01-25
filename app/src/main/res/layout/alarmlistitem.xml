@@ -20,6 +20,7 @@
         android:orientation="horizontal"
         android:layout_width="fill_parent"
         android:layout_height="fill_parent"
+        android:id="@+id/alarmlistitem_buttonbar"
         style="?android:attr/buttonBarStyle">
 
         <Button
@@ -30,7 +31,7 @@
             android:focusable="false"
             android:focusableInTouchMode="false"
             android:drawableStart="@drawable/ic_action_accept"
-            android:text="Ich komme" />
+            android:text="@string/ichkomme" />
 
         <Button
             style="?android:attr/buttonBarButtonStyle"
@@ -40,6 +41,7 @@
             android:focusable="false"
             android:focusableInTouchMode="false"
             android:drawableStart="@drawable/ic_action_cancel"
-            android:text="Ich komme nicht" />
+            android:text="@string/ichkommenicht" />
     </LinearLayout>
+
 </LinearLayout>

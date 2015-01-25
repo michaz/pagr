@@ -24,6 +24,8 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.util.Log;
+import android.view.View;
+import android.view.ViewGroup;
 import android.widget.ListAdapter;
 import android.widget.ListView;
 import android.widget.SimpleAdapter;
@@ -33,10 +35,10 @@ import com.google.android.gms.common.GooglePlayServicesUtil;
 import com.google.android.gms.gcm.GoogleCloudMessaging;
 import com.pagr.backend.messaging.Messaging;
 import com.pagr.backend.messaging.model.Alarm;
+import com.pagr.backend.messaging.model.RegistrationRecord;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -277,10 +279,39 @@ public class DemoActivity extends Activity implements SwipeRefreshLayout.OnRefre
                 Map<String,Object> element = new HashMap<>();
                 element.put("message", alarm.getMessage());
                 element.put("alarmDate", alarm.getAlarmDate());
+                element.put("pendingReplies", alarm.getFullPendingReplies());
                 data.add(element);
             }
-            return new SimpleAdapter(DemoActivity.this, data, R.layout.alarmlistitem,
-                    new String[]{"alarmDate", "message"}, new int[]{R.id.alarmlistitem_date, R.id.alarmlistitem_message});
+            SimpleAdapter adapter = new SimpleAdapter(DemoActivity.this, data, R.layout.alarmlistitem,
+                    new String[]{"alarmDate", "message", "pendingReplies"}, new int[]{R.id.alarmlistitem_date, R.id.alarmlistitem_message, R.id.alarmlistitem_buttonbar});
+            adapter.setViewBinder(new SimpleAdapter.ViewBinder() {
+                @Override
+                public boolean setViewValue(View view, Object data, String textRepresentation) {
+                    if (view.getId() == R.id.alarmlistitem_buttonbar) {
+                        List<RegistrationRecord> things = ((List<RegistrationRecord>) data);
+                        if (!isPendingForMe(things)) {
+                            view.setVisibility(View.GONE);
+                        } else {
+                            view.setVisibility(View.VISIBLE);
+                        }
+                        return true;
+                    }
+                    return false;
+                }
+
+                private boolean isPendingForMe(List<RegistrationRecord> alarm) {
+                    if (alarm == null) {
+                        return false;
+                    }
+                    for (RegistrationRecord record : alarm) {
+                        if (regId.equals(record.getRegId())) {
+                            return true;
+                        }
+                    }
+                    return false;
+                }
+            });
+            return adapter;
         }
     }
 }

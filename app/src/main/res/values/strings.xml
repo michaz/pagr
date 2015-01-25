@@ -7,4 +7,6 @@
     <string name="server_register_error">Fehler beim Anmelden</string>
     <string name="server_unregistered">abgemeldet</string>
     <string name="server_unregister_error">Fehler beim Abmelden</string>
+    <string name="ichkomme">Ich komme</string>
+    <string name="ichkommenicht">Ich komme nicht</string>
 </resources>
