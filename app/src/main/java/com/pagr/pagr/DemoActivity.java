@@ -22,6 +22,7 @@ import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager.NameNotFoundException;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.support.v4.widget.SwipeRefreshLayout;
 import android.util.Log;
 import android.widget.ListAdapter;
 import android.widget.ListView;
@@ -43,7 +44,7 @@ import java.util.Map;
 /**
  * Main UI for the demo app.
  */
-public class DemoActivity extends Activity {
+public class DemoActivity extends Activity implements SwipeRefreshLayout.OnRefreshListener {
 
     public static final String PROPERTY_REG_ID = "registration_id";
     private static final String PROPERTY_APP_VERSION = "appVersion";
@@ -65,11 +66,14 @@ public class DemoActivity extends Activity {
 
     String regId;
     ListView alarmList;
+    private SwipeRefreshLayout swipeLayout;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.main);
+        swipeLayout = (SwipeRefreshLayout) findViewById(R.id.list_alarms_swipecontainer);
+        swipeLayout.setOnRefreshListener(this);
         context = getApplicationContext();
         register();
         alarmList = (ListView) findViewById(R.id.list_alarms);
@@ -233,6 +237,11 @@ public class DemoActivity extends Activity {
         new ServerUtilities().register(getApplicationContext(), regId);
     }
 
+    @Override
+    public void onRefresh() {
+        new ListRetriever().execute();
+    }
+
     private class ListRetriever extends AsyncTask<Void, Void, Collection<Alarm>> {
 
         @Override
@@ -249,6 +258,7 @@ public class DemoActivity extends Activity {
         @SuppressWarnings("null")
         protected void onPostExecute(Collection<Alarm> result) {
             alarmList.setAdapter(createListAdapter(result));
+            swipeLayout.setRefreshing(false);
         }
 
         private ListAdapter createListAdapter(Collection<Alarm> result) {
