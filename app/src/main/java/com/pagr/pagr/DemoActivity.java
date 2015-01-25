@@ -37,6 +37,8 @@ import com.pagr.backend.messaging.model.Alarm;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -244,10 +246,10 @@ public class DemoActivity extends Activity implements SwipeRefreshLayout.OnRefre
         new ListRetriever().execute();
     }
 
-    private class ListRetriever extends AsyncTask<Void, Void, Collection<Alarm>> {
+    private class ListRetriever extends AsyncTask<Void, Void, List<Alarm>> {
 
         @Override
-        protected Collection<Alarm> doInBackground(Void... params) {
+        protected List<Alarm> doInBackground(Void... params) {
             Messaging messaging = AcceptRejectService.create();
             try {
                 return messaging.alarms().list().execute().getItems();
@@ -258,12 +260,18 @@ public class DemoActivity extends Activity implements SwipeRefreshLayout.OnRefre
 
         @Override
         @SuppressWarnings("null")
-        protected void onPostExecute(Collection<Alarm> result) {
+        protected void onPostExecute(List<Alarm> result) {
             alarmList.setAdapter(createListAdapter(result));
             swipeLayout.setRefreshing(false);
         }
 
-        private ListAdapter createListAdapter(Collection<Alarm> result) {
+        private ListAdapter createListAdapter(List<Alarm> result) {
+            Collections.sort(result, new Comparator<Alarm>() {
+                @Override
+                public int compare(Alarm lhs, Alarm rhs) {
+                    return - Long.compare(lhs.getAlarmDate().getValue(), rhs.getAlarmDate().getValue());
+                }
+            });
             List<Map<String,Object>> data = new ArrayList<>();
             for (Alarm alarm : result) {
                 Map<String,Object> element = new HashMap<>();
