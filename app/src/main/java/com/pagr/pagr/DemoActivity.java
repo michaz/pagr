@@ -77,7 +77,8 @@ public class DemoActivity extends Activity implements SwipeRefreshLayout.OnRefre
         context = getApplicationContext();
         register();
         alarmList = (ListView) findViewById(R.id.list_alarms);
-        new ListRetriever().execute();
+        swipeLayout.setRefreshing(true);
+        onRefresh();
     }
 
     private void register() {
@@ -96,8 +97,9 @@ public class DemoActivity extends Activity implements SwipeRefreshLayout.OnRefre
     @Override
     protected void onResume() {
         super.onResume();
-        // Check device for Play Services APK.
         checkPlayServices();
+        swipeLayout.setRefreshing(true);
+        onRefresh();
     }
 
     /**
