@@ -2,6 +2,7 @@ package com.pagr.pagr;
 
 import android.app.IntentService;
 import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 import android.util.Log;
@@ -37,6 +38,12 @@ public class AcceptRejectService extends IntentService {
                             }
                         }
                 ).build();
+    }
+
+    public static PendingIntent createIntent(Context context, Long alarmId) {
+        Intent intent = new Intent(context, AcceptRejectService.class);
+        intent.putExtra("alarmId", alarmId);
+        return PendingIntent.getService(context, 0, intent, PendingIntent.FLAG_CANCEL_CURRENT);
     }
 
     @Override

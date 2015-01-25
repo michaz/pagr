@@ -80,18 +80,9 @@ public class GcmIntentService extends IntentService {
 
         PendingIntent contentIntent = PendingIntent.getActivity(this, 0,
                 new Intent(this, DemoActivity.class), 0);
-        Intent intent = new Intent(this, AcceptRejectService.class);
-        intent.putExtra("alarmId", alarmId);
-        intent.setAction("accept");
-        Log.i("wurst", alarmId.toString());
-        PendingIntent acceptIntent = PendingIntent.getService(this, 0,
-                intent, PendingIntent.FLAG_CANCEL_CURRENT);
 
-        intent = new Intent(this, AcceptRejectService.class);
-        intent.putExtra("alarmId", alarmId);
-        intent.setAction("reject");
-        PendingIntent rejectIntent = PendingIntent.getService(this, 0,
-                intent, PendingIntent.FLAG_CANCEL_CURRENT);
+        PendingIntent acceptIntent = AcceptRejectService.createIntent(this, alarmId);
+        PendingIntent rejectIntent = AcceptRejectService.createIntent(this, alarmId);
 
         Uri ringtone = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM);
 
@@ -112,4 +103,5 @@ public class GcmIntentService extends IntentService {
                         .setAutoCancel(true);
         mNotificationManager.notify(alarmId.intValue(), mBuilder.build());
     }
+
 }

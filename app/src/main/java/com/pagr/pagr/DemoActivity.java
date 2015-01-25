@@ -16,6 +16,7 @@
 package com.pagr.pagr;
 
 import android.app.Activity;
+import android.app.PendingIntent;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.pm.PackageInfo;
@@ -26,6 +27,7 @@ import android.support.v4.widget.SwipeRefreshLayout;
 import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.ListAdapter;
 import android.widget.ListView;
 import android.widget.SimpleAdapter;
@@ -279,31 +281,54 @@ public class DemoActivity extends Activity implements SwipeRefreshLayout.OnRefre
                 Map<String,Object> element = new HashMap<>();
                 element.put("message", alarm.getMessage());
                 element.put("alarmDate", alarm.getAlarmDate());
-                element.put("pendingReplies", alarm.getFullPendingReplies());
+                element.put("pendingReplies", alarm);
                 data.add(element);
             }
             SimpleAdapter adapter = new SimpleAdapter(DemoActivity.this, data, R.layout.alarmlistitem,
-                    new String[]{"alarmDate", "message", "pendingReplies"}, new int[]{R.id.alarmlistitem_date, R.id.alarmlistitem_message, R.id.alarmlistitem_buttonbar});
+                    new String[]{"alarmDate", "message", "pendingReplies"},
+                    new int[]{R.id.alarmlistitem_date, R.id.alarmlistitem_message, R.id.alarmlistitem_buttonbar});
             adapter.setViewBinder(new SimpleAdapter.ViewBinder() {
                 @Override
                 public boolean setViewValue(View view, Object data, String textRepresentation) {
                     if (view.getId() == R.id.alarmlistitem_buttonbar) {
-                        List<RegistrationRecord> things = ((List<RegistrationRecord>) data);
-                        if (!isPendingForMe(things)) {
+                        final Alarm alarm = (Alarm) data;
+                        if (!isPendingForMe(alarm)) {
                             view.setVisibility(View.GONE);
                         } else {
                             view.setVisibility(View.VISIBLE);
+                            Button accept = (Button) view.findViewById(R.id.alarmlistitem_acceptButton);
+                            accept.setOnClickListener(new View.OnClickListener() {
+                                @Override
+                                public void onClick(View v) {
+                                    try {
+                                        AcceptRejectService.createIntent(DemoActivity.this, alarm.getId()).send();
+                                    } catch (PendingIntent.CanceledException e) {
+                                        e.printStackTrace();
+                                    }
+                                }
+                            });
+                            Button reject = (Button) view.findViewById(R.id.alarmlistitem_rejectButton);
+                            reject.setOnClickListener(new View.OnClickListener() {
+                                @Override
+                                public void onClick(View v) {
+                                    try {
+                                        AcceptRejectService.createIntent(DemoActivity.this, alarm.getId()).send();
+                                    } catch (PendingIntent.CanceledException e) {
+                                        e.printStackTrace();
+                                    }
+                                }
+                            });
                         }
                         return true;
                     }
                     return false;
                 }
 
-                private boolean isPendingForMe(List<RegistrationRecord> alarm) {
-                    if (alarm == null) {
+                private boolean isPendingForMe(Alarm alarm) {
+                    if (alarm.getFullPendingReplies() == null) {
                         return false;
                     }
-                    for (RegistrationRecord record : alarm) {
+                    for (RegistrationRecord record : alarm.getFullPendingReplies()) {
                         if (regId.equals(record.getRegId())) {
                             return true;
                         }
