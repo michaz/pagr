@@ -108,7 +108,8 @@ public class GcmIntentService extends IntentService {
                         .setContentText(message)
                         .addAction(R.drawable.ic_stat_gcm, getString(R.string.accept), acceptIntent)
                         .addAction(R.drawable.ic_launcher, getString(R.string.decline), rejectIntent)
-                        .setContentIntent(contentIntent);
+                        .setContentIntent(contentIntent)
+                        .setAutoCancel(true);
         mNotificationManager.notify(alarmId.intValue(), mBuilder.build());
     }
 }
