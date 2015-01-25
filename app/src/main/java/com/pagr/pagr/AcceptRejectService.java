@@ -49,7 +49,7 @@ public class AcceptRejectService extends IntentService {
             NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
             notificationManager.cancel(alarmId.intValue());
         } catch (IOException e) {
-            e.printStackTrace();
+            throw new RuntimeException(e);
         }
     }
 

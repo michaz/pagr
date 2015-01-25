@@ -106,8 +106,8 @@ public class GcmIntentService extends IntentService {
                         .setContentTitle("Alarm")
                         .setStyle(new NotificationCompat.BigTextStyle().bigText(message))
                         .setContentText(message)
-                        .addAction(R.drawable.ic_stat_gcm, getString(R.string.accept), acceptIntent)
-                        .addAction(R.drawable.ic_launcher, getString(R.string.decline), rejectIntent)
+                        .addAction(R.drawable.ic_action_accept, getString(R.string.accept), acceptIntent)
+                        .addAction(R.drawable.ic_action_cancel, getString(R.string.decline), rejectIntent)
                         .setContentIntent(contentIntent)
                         .setAutoCancel(true);
         mNotificationManager.notify(alarmId.intValue(), mBuilder.build());
