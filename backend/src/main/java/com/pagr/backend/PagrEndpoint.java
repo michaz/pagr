@@ -18,6 +18,7 @@ import com.googlecode.objectify.Key;
 import com.googlecode.objectify.Ref;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
@@ -38,7 +39,7 @@ public class PagrEndpoint {
             path = "alarms/post",
             httpMethod = ApiMethod.HttpMethod.POST
     )
-    public void postAlarm(@Named("message") String message) throws IOException {
+    public void postAlarm(@Named("message") String message, @Named("topic") String topicId) throws IOException {
         if (message == null || message.trim().length() == 0) {
             log.warning("Not sending message because it is empty");
             return;
@@ -48,12 +49,38 @@ public class PagrEndpoint {
         alarm.setAlarmDate(new Date());
         alarm.setMessage(message);
 
-        List<RegistrationRecord> records = ofy().load().type(RegistrationRecord.class).list();
+        List<RegistrationRecord> records;
+        if (topicId == null || topicId.trim().length() == 0) {
+            records = ofy().load().type(RegistrationRecord.class).list();
+        } else {
+            records = new ArrayList<>();
+            Topic topic = ofy().load().key(Key.create(Topic.class, topicId)).now();
+            for (Ref<RegistrationRecord> ref : topic.getSubscriptions()) {
+                records.add(ref.get());
+            }
+        }
+
         for (RegistrationRecord record : records) {
             alarm.getPendingReplies().add(Ref.create(record));
         }
         ofy().save().entity(alarm).now();
         sendAll(alarm);
+    }
+
+    @ApiMethod(
+            name = "alarms.subscribe",
+            path = "alarms/subscribe",
+            httpMethod = ApiMethod.HttpMethod.POST
+    )
+    public void subscribe(@Named("topic") String topicId, @Named("regId") String regId) {
+        Topic topic = ofy().load().key(Key.create(Topic.class, topicId)).now();
+        if (topic == null) {
+            topic = new Topic();
+            topic.setId(topicId);
+        }
+        RegistrationRecord registrationRecord = findRecord(regId);
+        topic.getSubscriptions().add(Ref.create(registrationRecord));
+        ofy().save().entity(topic);
     }
 
     @ApiMethod(
