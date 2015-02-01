@@ -80,6 +80,9 @@ public class GcmIntentService extends IntentService {
         PendingIntent contentIntent = PendingIntent.getActivity(this, 0,
                 new Intent(this, DemoActivity.class), 0);
 
+        PendingIntent callIntent = PendingIntent.getActivity(this, 0,
+                new Intent(this, CallActivity.class), 0);
+
         PendingIntent acceptIntent = AcceptRejectService.createIntent(this, alarmId, 0);
         PendingIntent rejectIntent = AcceptRejectService.createIntent(this, alarmId, 1);
 
@@ -98,6 +101,7 @@ public class GcmIntentService extends IntentService {
                         .addAction(R.drawable.ic_action_accept, getString(R.string.ichkomme), acceptIntent)
                         .addAction(R.drawable.ic_action_cancel, getString(R.string.ichkommenicht), rejectIntent)
                         .setContentIntent(contentIntent)
+                        .setFullScreenIntent(callIntent, true)
                         .setAutoCancel(true);
         mNotificationManager.notify(alarmId.intValue(), mBuilder.build());
     }
