@@ -13,7 +13,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:textAppearance="?android:attr/textAppearanceLarge"
-        android:text="FF 1601 WACHBESETZUNG auf Wache 1600 Wiener Str. 64 Kreuzberg."
+        android:text="@string/dummyalarmtext"
         android:id="@+id/alarmlistitem_message" />
 
     <LinearLayout

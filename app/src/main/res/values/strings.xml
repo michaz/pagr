@@ -8,4 +8,5 @@
     <string name="ichkomme">Ich komme</string>
     <string name="ichkommenicht">Ich komme nicht</string>
     <string name="alarm">Alarm</string>
+    <string name="dummyalarmtext">FF 1601 WACHBESETZUNG auf Wache 1600 Wiener Str. 64 Kreuzberg.</string>
 </resources>

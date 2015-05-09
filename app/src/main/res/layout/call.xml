@@ -4,6 +4,43 @@
     android:layout_height="match_parent"
     android:background="@color/leuchtrot">
 
-    <include layout="@layout/alarmlistitem"/>
+    <ImageView
+        android:layout_width="250dp"
+        android:layout_height="250dp"
+        android:id="@+id/imageView"
+        android:src="@drawable/alarm65" />
 
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceLarge"
+        android:text="@string/dummyalarmtext"
+        android:id="@+id/alarmlistitem_message" />
+
+    <LinearLayout
+        android:orientation="horizontal"
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+        android:id="@+id/alarmlistitem_buttonbar"
+        style="?android:attr/buttonBarStyle">
+
+        <Button
+            android:id="@+id/alarmlistitem_rejectButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:focusable="false"
+            android:focusableInTouchMode="false"
+            android:drawableStart="@drawable/ic_action_cancel"
+            android:text="@string/ichkommenicht" />
+
+        <Button
+            android:id="@+id/alarmlistitem_acceptButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:focusable="false"
+            android:focusableInTouchMode="false"
+            android:drawableStart="@drawable/ic_action_accept"
+            android:text="@string/ichkomme" />
+
+    </LinearLayout>
 </LinearLayout>
