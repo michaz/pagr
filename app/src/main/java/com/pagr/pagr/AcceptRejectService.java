@@ -5,6 +5,7 @@ import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
+import android.os.Bundle;
 import android.util.Log;
 
 import com.google.api.client.extensions.android.http.AndroidHttp;
@@ -12,6 +13,7 @@ import com.google.api.client.extensions.android.json.AndroidJsonFactory;
 import com.google.api.client.googleapis.services.AbstractGoogleClientRequest;
 import com.google.api.client.googleapis.services.GoogleClientRequestInitializer;
 import com.pagr.backend.pagr.Pagr;
+import com.pagr.backend.pagr.model.Alarm;
 
 import java.io.IOException;
 
@@ -40,9 +42,9 @@ public class AcceptRejectService extends IntentService {
                 ).build();
     }
 
-    public static PendingIntent createIntent(Context context, Long alarmId, int req) {
+    public static PendingIntent createIntent(Context context, Bundle extras, int req) {
         Intent intent = new Intent(context, AcceptRejectService.class);
-        intent.putExtra("alarmId", alarmId);
+        intent.putExtras(extras);
         return PendingIntent.getService(context, req, intent, PendingIntent.FLAG_CANCEL_CURRENT);
     }
 
@@ -51,10 +53,10 @@ public class AcceptRejectService extends IntentService {
         String regId = getSharedPreferences(DemoActivity.class.getSimpleName(), Context.MODE_PRIVATE).getString(DemoActivity.PROPERTY_REG_ID, "");
         Log.i(AcceptRejectService.class.toString(), "accepted/rejected");
         try {
-            Long alarmId = intent.getLongExtra("alarmId", 0);
-            service.alarms().postStatus(alarmId, regId).execute();
+            Alarm alarm = DataUtils.alarm(intent.getExtras());
+            service.alarms().postStatus(alarm.getId(), regId).execute();
             NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
-            notificationManager.cancel(alarmId.intValue());
+            notificationManager.cancel(alarm.getId().intValue());
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

@@ -17,6 +17,7 @@
 package com.pagr.pagr;
 
 import com.google.android.gms.gcm.GoogleCloudMessaging;
+import com.pagr.backend.pagr.model.Alarm;
 
 import android.app.IntentService;
 import android.app.NotificationManager;
@@ -71,23 +72,24 @@ public class GcmIntentService extends IntentService {
     }
 
     private void sendAlarmNotification(Bundle msg) {
-        String message = msg.getString("message");
-        Long alarmId = Long.parseLong(msg.getString("alarmId"));
 
         NotificationManager mNotificationManager = (NotificationManager)
                 this.getSystemService(Context.NOTIFICATION_SERVICE);
 
-        PendingIntent contentIntent = PendingIntent.getActivity(this, 0,
-                new Intent(this, DemoActivity.class), 0);
+        Intent intent = new Intent(this, DemoActivity.class);
+        intent.putExtras(msg);
+        PendingIntent contentIntent = PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
 
-        PendingIntent callIntent = PendingIntent.getActivity(this, 0,
-                new Intent(this, CallActivity.class), 0);
+        Intent intent1 = new Intent(this, CallActivity.class);
+        intent1.putExtras(msg);
+        PendingIntent callIntent = PendingIntent.getActivity(this, 0, intent1, PendingIntent.FLAG_UPDATE_CURRENT);
 
-        PendingIntent acceptIntent = AcceptRejectService.createIntent(this, alarmId, 0);
-        PendingIntent rejectIntent = AcceptRejectService.createIntent(this, alarmId, 1);
+        PendingIntent acceptIntent = AcceptRejectService.createIntent(this, msg, 0);
+        PendingIntent rejectIntent = AcceptRejectService.createIntent(this, msg, 1);
 
         Uri ringtone = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM);
 
+        Alarm alarm = DataUtils.alarm(msg);
         NotificationCompat.Builder mBuilder =
                 new NotificationCompat.Builder(this)
                         .setPriority(NotificationCompat.PRIORITY_MAX)
@@ -97,13 +99,13 @@ public class GcmIntentService extends IntentService {
                         .setVibrate(new long[]{500, 500})
                         .setSmallIcon(R.drawable.ic_stat_gcm)
                         .setContentTitle(getString(R.string.alarm))
-                        .setContentText(message)
+                        .setContentText(alarm.getMessage())
                         .addAction(R.drawable.ic_action_accept, getString(R.string.ichkomme), acceptIntent)
                         .addAction(R.drawable.ic_action_cancel, getString(R.string.ichkommenicht), rejectIntent)
                         .setContentIntent(contentIntent)
                         .setFullScreenIntent(callIntent, true)
                         .setAutoCancel(true);
-        mNotificationManager.notify(alarmId.intValue(), mBuilder.build());
+        mNotificationManager.notify(alarm.getId().intValue(), mBuilder.build());
     }
 
 }
