@@ -14,6 +14,7 @@ public class OfyService {
         ObjectifyService.register(RegistrationRecord.class);
         ObjectifyService.register(Alarm.class);
         ObjectifyService.register(Topic.class);
+        ObjectifyService.register(CellUpdate.class);
     }
 
     public static Objectify ofy() {

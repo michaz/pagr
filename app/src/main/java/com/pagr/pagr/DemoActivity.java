@@ -88,6 +88,8 @@ public class DemoActivity extends Activity implements SwipeRefreshLayout.OnRefre
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        Intent intent = new Intent(this, CellIdService.class);
+        startService(intent);
         setContentView(R.layout.main);
         swipeLayout = (SwipeRefreshLayout) findViewById(R.id.list_alarms_swipecontainer);
         swipeLayout.setOnRefreshListener(this);

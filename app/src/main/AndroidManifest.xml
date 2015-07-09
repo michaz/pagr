@@ -18,6 +18,12 @@
         android:protectionLevel="signature" />
 
     <uses-permission android:name="com.example.gcm.permission.C2D_MESSAGE" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
+    <uses-permission android:name="android.permission.READ_PHONE_STATE"/>
+
+
+
 
     <application
         android:allowBackup="true"
@@ -55,6 +61,8 @@
 
         <service android:name=".GcmIntentService" />
         <service android:name=".AcceptRejectService" />
+
+        <service android:name=".CellIdService" />
 
 
     </application>

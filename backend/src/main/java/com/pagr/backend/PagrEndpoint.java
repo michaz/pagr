@@ -35,6 +35,15 @@ public class PagrEndpoint {
     private static final String API_KEY = System.getProperty("gcm.api.key");
 
     @ApiMethod(
+            name = "cellupdate.post",
+            path = "cellupdate/post",
+            httpMethod = ApiMethod.HttpMethod.POST
+    )
+    public void postCell(CellUpdate cellUpdate) {
+        ofy().save().entity(cellUpdate).now();
+    }
+
+    @ApiMethod(
             name = "alarms.post",
             path = "alarms/post",
             httpMethod = ApiMethod.HttpMethod.POST
