@@ -1,130 +1,117 @@
 package com.pagr.pagr;
 
+import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Intent;
-import android.location.Location;
+import android.os.Binder;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.support.annotation.Nullable;
-import android.telephony.CellInfo;
-import android.telephony.CellInfoLte;
-import android.telephony.NeighboringCellInfo;
-import android.telephony.PhoneStateListener;
-import android.telephony.TelephonyManager;
-import android.util.Log;
 
+import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.location.ActivityRecognition;
+import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
-import com.google.api.client.extensions.android.http.AndroidHttp;
-import com.google.api.client.extensions.android.json.AndroidJsonFactory;
-import com.google.api.client.googleapis.services.AbstractGoogleClientRequest;
-import com.google.api.client.googleapis.services.GoogleClientRequestInitializer;
-import com.pagr.backend.pagr.Pagr;
-import com.pagr.backend.pagr.model.CellUpdate;
 
-import java.io.IOException;
-import java.util.List;
+public class CellIdService extends Service implements GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener {
 
-public class CellIdService extends Service implements GoogleApiClient.ConnectionCallbacks {
+    /**
+     * Class for clients to access.  Because we know this service always
+     * runs in the same process as its clients, we don't need to deal with
+     * IPC.
+     */
+    public class LocalBinder extends Binder {
+        CellIdService getService() {
+            return CellIdService.this;
+        }
+    }
 
-    private PhoneStateListener listener;
 
-    private TelephonyManager tm;
-    private Pagr service;
     private GoogleApiClient mGoogleApiClient;
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        service = new Pagr.Builder(
-                AndroidHttp.newCompatibleTransport(),
-                new AndroidJsonFactory(), null)
-                .setRootUrl("https://pagrff.appspot.com/_ah/api/")
-                .setGoogleClientRequestInitializer(
-                        new GoogleClientRequestInitializer() {
-                            @Override
-                            public void initialize(AbstractGoogleClientRequest<?> abstractGoogleClientRequest)
-                                    throws IOException {
-                                abstractGoogleClientRequest.setDisableGZipContent(true);
-                            }
-                        }
-                ).build();
         mGoogleApiClient = new GoogleApiClient.Builder(this)
                 .addConnectionCallbacks(this)
+                .addOnConnectionFailedListener(this)
                 .addApi(LocationServices.API)
+                .addApi(ActivityRecognition.API)
                 .build();
         mGoogleApiClient.connect();
-        tm = (TelephonyManager) getApplicationContext().getSystemService(TELEPHONY_SERVICE);
-        listener = new PhoneStateListener() {
-            @Override
-            public void onCellInfoChanged(List<CellInfo> cellInfo) {
-                dump();
-            }
-        };
         return START_STICKY;
-    }
-
-    @Override
-    public void onDestroy() {
-        tm.listen(listener, 0);
-    }
-
-    private void dump() {
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                Log.i("wurst", "wurst");
-                Location lastLocation = LocationServices.FusedLocationApi.getLastLocation(
-                        mGoogleApiClient);
-                List<CellInfo> allCellInfo = tm.getAllCellInfo();
-                if (allCellInfo != null) { // happens!
-                    for (CellInfo cellInfo : allCellInfo) {
-                        Log.i("allCellInfo", cellInfo.toString());
-                        if (cellInfo.isRegistered()) {
-                            if (cellInfo instanceof CellInfoLte) {
-                                CellInfoLte cellInfoLte = (CellInfoLte) cellInfo;
-                                CellUpdate cellUpdate = new CellUpdate();
-                                cellUpdate.setTimestamp(cellInfoLte.getTimeStamp());
-                                cellUpdate.setCi(cellInfoLte.getCellIdentity().getCi());
-                                cellUpdate.setMcc(cellInfoLte.getCellIdentity().getMcc());
-                                cellUpdate.setMnc(cellInfoLte.getCellIdentity().getMnc());
-                                cellUpdate.setPci(cellInfoLte.getCellIdentity().getPci());
-                                cellUpdate.setTac(cellInfoLte.getCellIdentity().getTac());
-                                if (lastLocation != null) {
-                                    cellUpdate.setLatitude(lastLocation.getLatitude());
-                                    cellUpdate.setLongitude(lastLocation.getLongitude());
-                                }
-                                try {
-                                    service.cellupdate().post(cellUpdate).execute();
-                                } catch (IOException e) {
-                                    e.printStackTrace();
-                                }
-                            }
-                        }
-                    }
-                }
-                List<NeighboringCellInfo> neighboringCellInfo = tm.getNeighboringCellInfo();
-                if (neighboringCellInfo != null) {
-                    for (NeighboringCellInfo cellInfo : neighboringCellInfo) {
-                        Log.i("neighboringCellInfo", cellInfo.toString());
-                    }
-                }
-            }
-        }).start();
     }
 
     @Nullable
     @Override
     public IBinder onBind(Intent intent) {
-        return null;
+        return mBinder;
     }
+
+    // This is the object that receives interactions from clients.  See
+    // RemoteService for a more complete example.
+    private final IBinder mBinder = new LocalBinder();
 
     @Override
     public void onConnected(Bundle bundle) {
-        tm.listen(listener, PhoneStateListener.LISTEN_CELL_INFO);
+        ActivityRecognition.ActivityRecognitionApi.requestActivityUpdates(
+                mGoogleApiClient,
+                10000,
+                getActivityDetectionPendingIntent()
+        );
     }
+
+    void turnOnLocationUpdates() {
+        if (mGoogleApiClient.isConnected()) {
+            LocationRequest lr = new LocationRequest();
+            lr.setInterval(10000);
+            lr.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
+            LocationServices.FusedLocationApi.requestLocationUpdates(
+                    mGoogleApiClient,
+                    lr,
+                    getLocationUpdatePendingIntent()
+            );
+        }
+    }
+
+    void turnOffLocationUpdates() {
+        if (mGoogleApiClient.isConnected()) {
+            LocationServices.FusedLocationApi.removeLocationUpdates(
+                    mGoogleApiClient,
+                    getLocationUpdatePendingIntent()
+            );
+        }
+    }
+
+    private PendingIntent getLocationUpdatePendingIntent() {
+        Intent intent = new Intent(this, LocationUpdateIntentService.class);
+
+        // We use FLAG_UPDATE_CURRENT so that we get the same pending intent back when calling
+        // requestActivityUpdates() and removeActivityUpdates().
+        return PendingIntent.getService(this, 1, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+    }
+
+    private PendingIntent getActivityDetectionPendingIntent() {
+        Intent intent = new Intent(this, DetectedActivitiesIntentService.class);
+
+        // We use FLAG_UPDATE_CURRENT so that we get the same pending intent back when calling
+        // requestActivityUpdates() and removeActivityUpdates().
+        return PendingIntent.getService(this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+    }
+
 
     @Override
     public void onConnectionSuspended(int i) {
+
+    }
+
+    @Override
+    public void onDestroy() {
+        mGoogleApiClient.disconnect();
+    }
+
+    @Override
+    public void onConnectionFailed(ConnectionResult connectionResult) {
 
     }
 }
