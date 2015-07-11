@@ -81,4 +81,14 @@ public class CellUpdate {
     public void setLongitude(Double longitude) {
         this.longitude = longitude;
     }
+
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+
 }
