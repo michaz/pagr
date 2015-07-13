@@ -23,6 +23,7 @@ import com.pagr.backend.pagr.Pagr;
 import com.pagr.backend.pagr.model.CellUpdate;
 
 import java.io.IOException;
+import java.util.Calendar;
 import java.util.List;
 
 public class LocationUpdateIntentService extends IntentService {
@@ -73,7 +74,8 @@ public class LocationUpdateIntentService extends IntentService {
                     if (cellInfo instanceof CellInfoLte) {
                         CellInfoLte cellInfoLte = (CellInfoLte) cellInfo;
                         CellUpdate cellUpdate = new CellUpdate();
-                        cellUpdate.setTimestamp(cellInfoLte.getTimeStamp());
+                        cellUpdate.setTimestamp(Calendar.getInstance().getTimeInMillis());
+                        cellUpdate.setDeviceId(tm.getDeviceId());
                         cellUpdate.setCi(cellInfoLte.getCellIdentity().getCi());
                         cellUpdate.setMcc(cellInfoLte.getCellIdentity().getMcc());
                         cellUpdate.setMnc(cellInfoLte.getCellIdentity().getMnc());

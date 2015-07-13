@@ -60,6 +60,24 @@
         <url-pattern>/OData/*</url-pattern>
     </servlet-mapping>
 
+    <servlet>
+        <servlet-name>CellUpdatesCSVServlet</servlet-name>
+        <servlet-class>com.pagr.odata2.CellUpdatesCSVServlet</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>CellUpdatesCSVServlet</servlet-name>
+        <url-pattern>/csv</url-pattern>
+    </servlet-mapping>
+
+    <servlet>
+        <servlet-name>MapMatchServlet</servlet-name>
+        <servlet-class>com.pagr.odata2.MapMatchServlet</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>MapMatchServlet</servlet-name>
+        <url-pattern>/mapmatch</url-pattern>
+    </servlet-mapping>
+
 
     <welcome-file-list>
         <welcome-file>index.html</welcome-file>

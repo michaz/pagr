@@ -14,6 +14,9 @@ import com.google.api.server.spi.config.Api;
 import com.google.api.server.spi.config.ApiMethod;
 import com.google.api.server.spi.config.ApiNamespace;
 import com.google.api.server.spi.response.CollectionResponse;
+import com.google.appengine.api.taskqueue.Queue;
+import com.google.appengine.api.taskqueue.QueueFactory;
+import com.google.appengine.api.taskqueue.TaskOptions;
 import com.googlecode.objectify.Key;
 import com.googlecode.objectify.Ref;
 
@@ -40,7 +43,18 @@ public class PagrEndpoint {
             httpMethod = ApiMethod.HttpMethod.POST
     )
     public void postCell(CellUpdate cellUpdate) {
+        cellUpdate.setDone(false);
         ofy().save().entity(cellUpdate).now();
+    }
+
+    @ApiMethod(
+            name = "cellupdate.enqueue",
+            path = "cellupdate/enqueue",
+            httpMethod = ApiMethod.HttpMethod.POST
+    )
+    public void enqueueCellUpdates() {
+        Queue queue = QueueFactory.getDefaultQueue();
+        queue.add(TaskOptions.Builder.withUrl("/mapmatch"));
     }
 
     @ApiMethod(

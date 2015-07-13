@@ -1,7 +1,12 @@
 package com.pagr.backend;
 
+import com.google.api.server.spi.config.AnnotationBoolean;
+import com.google.api.server.spi.config.ApiResourceProperty;
+import com.googlecode.objectify.Key;
 import com.googlecode.objectify.annotation.Entity;
 import com.googlecode.objectify.annotation.Id;
+import com.googlecode.objectify.annotation.Index;
+import com.googlecode.objectify.annotation.Parent;
 
 @Entity
 public class CellUpdate {
@@ -9,7 +14,18 @@ public class CellUpdate {
     @Id
     Long id;
 
+    @Index
     Long timestamp;
+
+    @Index
+    String deviceId;
+
+    @Index    @ApiResourceProperty(ignored = AnnotationBoolean.TRUE)
+    Boolean done = false;
+
+    @Parent     @ApiResourceProperty(ignored = AnnotationBoolean.TRUE)
+    Key<LinkPassage> matchedLinkPassage;
+
     Integer ci;
     Integer mcc;
     Integer mnc;
@@ -90,5 +106,27 @@ public class CellUpdate {
         this.id = id;
     }
 
+    public String getDeviceId() {
+        return deviceId;
+    }
 
+    public void setDeviceId(String deviceId) {
+        this.deviceId = deviceId;
+    }
+
+    public Key<LinkPassage> getMatchedLinkPassage() {
+        return matchedLinkPassage;
+    }
+
+    public void setMatchedLinkPassage(Key<LinkPassage> matchedLinkPassage) {
+        this.matchedLinkPassage = matchedLinkPassage;
+    }
+
+    public Boolean getDone() {
+        return done;
+    }
+
+    public void setDone(Boolean done) {
+        this.done = done;
+    }
 }

@@ -51,11 +51,14 @@ public class MyEdmProvider extends EdmProvider {
 
             //Properties
             List<Property> properties = new ArrayList<>();
-            properties.add(new SimpleProperty().setName("Id").setType(EdmSimpleTypeKind.Int64));
+            properties.add(new SimpleProperty().setName("id").setType(EdmSimpleTypeKind.Int64));
+            properties.add(new SimpleProperty().setName("latitude").setType(EdmSimpleTypeKind.Double));
+            properties.add(new SimpleProperty().setName("longitude").setType(EdmSimpleTypeKind.Double));
+            properties.add(new SimpleProperty().setName("ci").setType(EdmSimpleTypeKind.Int64));
 
             //Key
             List<PropertyRef> keyProperties = new ArrayList<>();
-            keyProperties.add(new PropertyRef().setName("Id"));
+            keyProperties.add(new PropertyRef().setName("id"));
             Key key = new Key().setKeys(keyProperties);
 
             return new EntityType().setName(ENTITY_TYPE_1_1.getName())

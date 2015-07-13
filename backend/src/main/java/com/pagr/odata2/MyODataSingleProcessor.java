@@ -64,7 +64,10 @@ public class MyODataSingleProcessor extends ODataSingleProcessor {
 
     private Map<String, Object> serialize(CellUpdate cellUpdate) {
         Map<String, Object> element = new HashMap<>();
-        element.put("Id", cellUpdate.getId());
+        element.put("id", cellUpdate.getId());
+        element.put("latitude", cellUpdate.getLatitude());
+        element.put("longitude", cellUpdate.getLongitude());
+        element.put("ci", cellUpdate.getCi());
         return element;
     }
 
