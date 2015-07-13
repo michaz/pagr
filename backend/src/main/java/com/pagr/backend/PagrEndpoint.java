@@ -37,6 +37,22 @@ public class PagrEndpoint {
 
     private static final String API_KEY = System.getProperty("gcm.api.key");
 
+    @ApiMethod(name = "routes.list", path = "routes/list", httpMethod = ApiMethod.HttpMethod.GET)
+    public Collection<Route> getRoutes() {
+        return ofy().load().type(Route.class).list();
+    }
+
+    @ApiMethod(
+            name = "routes.get",
+            path = "routes/{id}",
+            httpMethod = ApiMethod.HttpMethod.GET
+    )
+    public Route getRoute(@Named("id") long id) {
+        Route route = ofy().load().key(Key.create(Route.class, id)).now();
+        route.setLinkPassages(ofy().load().type(LinkPassage.class).ancestor(route).list());
+        return route;
+    }
+
     @ApiMethod(
             name = "cellupdate.post",
             path = "cellupdate/post",
@@ -44,6 +60,7 @@ public class PagrEndpoint {
     )
     public void postCell(CellUpdate cellUpdate) {
         cellUpdate.setDone(false);
+        cellUpdate.setDeviceKey(Key.create(CellDevice.class, cellUpdate.deviceId));
         ofy().save().entity(cellUpdate).now();
     }
 

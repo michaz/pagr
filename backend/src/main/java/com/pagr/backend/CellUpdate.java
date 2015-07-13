@@ -24,7 +24,7 @@ public class CellUpdate {
     Boolean done = false;
 
     @Parent     @ApiResourceProperty(ignored = AnnotationBoolean.TRUE)
-    Key<LinkPassage> matchedLinkPassage;
+    Key<CellDevice> deviceKey;
 
     Integer ci;
     Integer mcc;
@@ -114,12 +114,12 @@ public class CellUpdate {
         this.deviceId = deviceId;
     }
 
-    public Key<LinkPassage> getMatchedLinkPassage() {
-        return matchedLinkPassage;
+    public Key<CellDevice> getDeviceKey() {
+        return deviceKey;
     }
 
-    public void setMatchedLinkPassage(Key<LinkPassage> matchedLinkPassage) {
-        this.matchedLinkPassage = matchedLinkPassage;
+    public void setDeviceKey(Key<CellDevice> deviceKey) {
+        this.deviceKey = deviceKey;
     }
 
     public Boolean getDone() {

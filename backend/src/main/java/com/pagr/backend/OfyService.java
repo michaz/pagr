@@ -17,6 +17,7 @@ public class OfyService {
         ObjectifyService.register(CellUpdate.class);
         ObjectifyService.register(Route.class);
         ObjectifyService.register(LinkPassage.class);
+        ObjectifyService.register(CellDevice.class);
     }
 
     public static Objectify ofy() {

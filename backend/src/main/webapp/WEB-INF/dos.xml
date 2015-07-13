@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<blacklistentries>
+    <blacklist>
+        <subnet>37.61.233.216</subnet>
+        <description>Some annoying data collecting bot.</description>
+    </blacklist>
+</blacklistentries>

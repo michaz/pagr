@@ -1,9 +1,15 @@
 package com.pagr.backend;
 
+import com.google.api.server.spi.config.AnnotationBoolean;
+import com.google.api.server.spi.config.ApiResourceProperty;
+import com.googlecode.objectify.Key;
 import com.googlecode.objectify.Ref;
 import com.googlecode.objectify.annotation.Entity;
 import com.googlecode.objectify.annotation.Id;
 import com.googlecode.objectify.annotation.Parent;
+
+import java.util.ArrayList;
+import java.util.Collection;
 
 @Entity
 public class LinkPassage {
@@ -11,13 +17,17 @@ public class LinkPassage {
     @Id
     Long id;
 
-    @Parent
+    @Parent @ApiResourceProperty(ignored = AnnotationBoolean.TRUE)
     Ref<Route> routeRef;
 
     Long wayId;
     Long srcNodeId;
     Long dstNodeId;
     String geometry;
+    Integer seq;
+
+    @ApiResourceProperty(ignored = AnnotationBoolean.TRUE)
+    Collection<Key<CellUpdate>> cellUpdates = new ArrayList<>();
 
     public Long getId() {
         return id;
@@ -66,4 +76,21 @@ public class LinkPassage {
     public void setRouteRef(Ref<Route> routeRef) {
         this.routeRef = routeRef;
     }
+
+    public Integer getSeq() {
+        return seq;
+    }
+
+    public void setSeq(Integer seq) {
+        this.seq = seq;
+    }
+
+    public Collection<Key<CellUpdate>> getCellUpdates() {
+        return cellUpdates;
+    }
+
+    public void setCellUpdates(Collection<Key<CellUpdate>> cellUpdates) {
+        this.cellUpdates = cellUpdates;
+    }
+
 }

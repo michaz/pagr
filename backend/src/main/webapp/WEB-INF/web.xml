@@ -78,6 +78,15 @@
         <url-pattern>/mapmatch</url-pattern>
     </servlet-mapping>
 
+    <servlet>
+        <servlet-name>RoutesGeoJSONServlet</servlet-name>
+        <servlet-class>com.pagr.odata2.RoutesGeoJSONServlet</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>RoutesGeoJSONServlet</servlet-name>
+        <url-pattern>/routes</url-pattern>
+    </servlet-mapping>
+
 
     <welcome-file-list>
         <welcome-file>index.html</welcome-file>
