@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<%@ page contentType="text/html; charset=UTF-8" %>
 <html>
 <head>
 	<title>Leaflet GeoJSON Example</title>
@@ -26,7 +26,7 @@
 
 		var layer = L.mapbox.featureLayer()
 		    .on('ready', run)
-    		.loadURL('/routes?route=6717567758499840');
+    		.loadURL('/routes?route=${param.route}');
     	layer.addTo(map);
 
     	function run() {
