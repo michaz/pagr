@@ -3,23 +3,13 @@ package com.pagr.odata2;
 import com.google.appengine.repackaged.com.google.gson.Gson;
 import com.googlecode.objectify.Key;
 import com.googlecode.objectify.Ref;
-import com.googlecode.objectify.VoidWork;
 import com.pagr.backend.CellUpdate;
 import com.pagr.backend.LinkPassage;
 import com.pagr.backend.Route;
 
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
-import java.io.PrintWriter;
-import java.net.URL;
-import java.net.URLConnection;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
 import java.util.logging.Logger;
 
@@ -43,15 +33,65 @@ public class RoutesGeoJSONServlet extends HttpServlet {
         route.setLinkPassages(list);
         List<JSONLineString> jsonLineStrings = new ArrayList<>();
         Gson gson = new Gson();
-        for (LinkPassage linkPassage : list) {
-            JSONLineString jsonLineString = gson.fromJson(linkPassage.getGeometry(), JSONLineString.class);
-            jsonLineStrings.add(jsonLineString);
+        if (req.getParameter("cellUpdates") == null || !Boolean.parseBoolean(req.getParameter("cellUpdates"))) {
+            JSONLinkPassageFeatureCollection jsonFeatureCollection = new JSONLinkPassageFeatureCollection();
+            for (LinkPassage linkPassage : list) {
+                JSONLineString jsonLineString = gson.fromJson(linkPassage.getGeometry(), JSONLineString.class);
+                jsonLineStrings.add(jsonLineString);
+                JSONLinkPassageFeature feature = new JSONLinkPassageFeature();
+                feature.geometry = jsonLineString;
+                feature.properties = linkPassage;
+                jsonFeatureCollection.features.add(feature);
+            }
+            JSONGeometryCollection jsonGeometryCollection = new JSONGeometryCollection();
+            jsonGeometryCollection.geometries = jsonLineStrings;
+            try (OutputStreamWriter osw = new OutputStreamWriter(response.getOutputStream())) {
+                gson.toJson(jsonFeatureCollection, osw);
+            }
+        } else {
+            JSONCellUpdateFeatureCollection jsonFeatureCollection = new JSONCellUpdateFeatureCollection();
+            for (LinkPassage linkPassage : list) {
+                for (Ref<CellUpdate> cellUpdateRef : linkPassage.getCellUpdates()) {
+                    JSONCellUpdateFeature feature = new JSONCellUpdateFeature();
+                    feature.geometry = new JSONPoint();
+                    feature.geometry.coordinates = new double[]{cellUpdateRef.get().getLongitude(),cellUpdateRef.get().getLatitude()};
+                    feature.properties = cellUpdateRef.get();
+                    jsonFeatureCollection.features.add(feature);
+
+                }
+            }
+            try (OutputStreamWriter osw = new OutputStreamWriter(response.getOutputStream())) {
+                gson.toJson(jsonFeatureCollection, osw);
+            }
         }
-        JSONGeometryCollection jsonGeometryCollection = new JSONGeometryCollection();
-        jsonGeometryCollection.geometries = jsonLineStrings;
-        try (OutputStreamWriter osw = new OutputStreamWriter(response.getOutputStream())) {
-            gson.toJson(jsonGeometryCollection, osw);
-        }
+    }
+
+    static class JSONLinkPassageFeatureCollection {
+        String type = "FeatureCollection";
+        List<JSONLinkPassageFeature> features = new ArrayList<>();
+    }
+
+    static class JSONCellUpdateFeatureCollection {
+        String type = "FeatureCollection";
+        List<JSONCellUpdateFeature> features = new ArrayList<>();
+    }
+
+
+    static class JSONLinkPassageFeature {
+        String type = "Feature";
+        JSONLineString geometry;
+        LinkPassage properties;
+    }
+
+    static class JSONCellUpdateFeature {
+        String type = "Feature";
+        JSONPoint geometry;
+        CellUpdate properties;
+    }
+
+    static class JSONPoint {
+        String type = "Point";
+        double[] coordinates;
     }
 
     static class JSONGeometryCollection {

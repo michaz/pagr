@@ -4,6 +4,7 @@ import com.google.api.server.spi.config.AnnotationBoolean;
 import com.google.api.server.spi.config.ApiResourceProperty;
 import com.googlecode.objectify.Key;
 import com.googlecode.objectify.Ref;
+import com.googlecode.objectify.annotation.Cache;
 import com.googlecode.objectify.annotation.Entity;
 import com.googlecode.objectify.annotation.Id;
 import com.googlecode.objectify.annotation.Parent;
@@ -11,7 +12,7 @@ import com.googlecode.objectify.annotation.Parent;
 import java.util.ArrayList;
 import java.util.Collection;
 
-@Entity
+@Entity @Cache
 public class LinkPassage {
 
     @Id
@@ -27,7 +28,7 @@ public class LinkPassage {
     Integer seq;
 
     @ApiResourceProperty(ignored = AnnotationBoolean.TRUE)
-    Collection<Key<CellUpdate>> cellUpdates = new ArrayList<>();
+    Collection<Ref<CellUpdate>> cellUpdates = new ArrayList<>();
 
     public Long getId() {
         return id;
@@ -85,11 +86,11 @@ public class LinkPassage {
         this.seq = seq;
     }
 
-    public Collection<Key<CellUpdate>> getCellUpdates() {
+    public Collection<Ref<CellUpdate>> getCellUpdates() {
         return cellUpdates;
     }
 
-    public void setCellUpdates(Collection<Key<CellUpdate>> cellUpdates) {
+    public void setCellUpdates(Collection<Ref<CellUpdate>> cellUpdates) {
         this.cellUpdates = cellUpdates;
     }
 

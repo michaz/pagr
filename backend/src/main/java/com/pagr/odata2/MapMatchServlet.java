@@ -88,7 +88,7 @@ public class MapMatchServlet extends HttpServlet {
                         linkPassage.setSeq(i++);
                         if (link.wpts != null) {
                             for (Wpt wpt : link.wpts) {
-                                linkPassage.getCellUpdates().add(Key.create(parentKey, CellUpdate.class, wpt.id));
+                                linkPassage.getCellUpdates().add(Ref.create(Key.create(parentKey, CellUpdate.class, wpt.id)));
                             }
                         }
                         link.linkPassage = ofy().save().entity(linkPassage).now();

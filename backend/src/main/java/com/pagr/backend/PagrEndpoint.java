@@ -19,6 +19,8 @@ import com.google.appengine.api.taskqueue.QueueFactory;
 import com.google.appengine.api.taskqueue.TaskOptions;
 import com.googlecode.objectify.Key;
 import com.googlecode.objectify.Ref;
+import com.googlecode.objectify.cmd.LoadType;
+import com.googlecode.objectify.cmd.Query;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -27,6 +29,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.logging.Logger;
 
+import javax.annotation.Nullable;
 import javax.inject.Named;
 
 import static com.pagr.backend.OfyService.ofy;
@@ -51,6 +54,22 @@ public class PagrEndpoint {
         Route route = ofy().load().key(Key.create(Route.class, id)).now();
         route.setLinkPassages(ofy().load().type(LinkPassage.class).ancestor(route).list());
         return route;
+    }
+
+    @ApiMethod(
+            name = "cellupdate.list",
+            path = "cellupdate",
+            httpMethod = ApiMethod.HttpMethod.GET
+    )
+    public List<CellUpdate> listCellUpdate(@Nullable @Named("minTime") Long minTime, @Nullable @Named("maxTime") Long maxTime) {
+        Query<CellUpdate> query = ofy().load().type(CellUpdate.class);
+        if (minTime != null) {
+            query = query.filter("timestamp >=", minTime);
+        }
+        if (maxTime != null) {
+            query = query.filter("timestamp <=", maxTime);
+        }
+        return query.list();
     }
 
     @ApiMethod(
