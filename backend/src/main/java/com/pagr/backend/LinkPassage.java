@@ -7,6 +7,7 @@ import com.googlecode.objectify.Ref;
 import com.googlecode.objectify.annotation.Cache;
 import com.googlecode.objectify.annotation.Entity;
 import com.googlecode.objectify.annotation.Id;
+import com.googlecode.objectify.annotation.Load;
 import com.googlecode.objectify.annotation.Parent;
 
 import java.util.ArrayList;
@@ -18,7 +19,8 @@ public class LinkPassage {
     @Id
     Long id;
 
-    @Parent @ApiResourceProperty(ignored = AnnotationBoolean.TRUE)
+    @Parent
+    @ApiResourceProperty(ignored = AnnotationBoolean.TRUE)
     Ref<Route> routeRef;
 
     Long wayId;
@@ -27,6 +29,7 @@ public class LinkPassage {
     String geometry;
     Integer seq;
 
+    @Load
     @ApiResourceProperty(ignored = AnnotationBoolean.TRUE)
     Collection<Ref<CellUpdate>> cellUpdates = new ArrayList<>();
 
