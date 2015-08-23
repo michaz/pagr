@@ -24,10 +24,15 @@
 			id: 'mapbox.light'
 		}).addTo(map);
 
-		var layer = L.mapbox.featureLayer()
+		var layer1 = L.mapbox.featureLayer()
 		    .on('ready', run)
     		.loadURL('/routes?route=${param.route}');
-    	layer.addTo(map);
+    	layer1.addTo(map);
+
+    	var layer2 = L.mapbox.featureLayer()
+        	.on('ready', run)
+            .loadURL('/routes?route=${param.route}&cellTowers=true');
+        layer2.addTo(map);
 
     	function run() {
     		layer.eachLayer(function(l) {
