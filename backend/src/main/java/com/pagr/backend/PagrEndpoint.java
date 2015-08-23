@@ -17,20 +17,31 @@ import com.google.api.server.spi.response.CollectionResponse;
 import com.google.appengine.api.taskqueue.Queue;
 import com.google.appengine.api.taskqueue.QueueFactory;
 import com.google.appengine.api.taskqueue.TaskOptions;
+import com.google.appengine.repackaged.com.google.gson.Gson;
 import com.googlecode.objectify.Key;
 import com.googlecode.objectify.Ref;
 import com.googlecode.objectify.cmd.LoadType;
 import com.googlecode.objectify.cmd.Query;
 
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
+import java.util.Properties;
 import java.util.logging.Logger;
 
 import javax.annotation.Nullable;
 import javax.inject.Named;
+import javax.mail.MessagingException;
+import javax.mail.Multipart;
+import javax.mail.Session;
+import javax.mail.Transport;
+import javax.mail.internet.InternetAddress;
+import javax.mail.internet.MimeBodyPart;
+import javax.mail.internet.MimeMessage;
+import javax.mail.internet.MimeMultipart;
 
 import static com.pagr.backend.OfyService.ofy;
 
@@ -81,6 +92,63 @@ public class PagrEndpoint {
         cellUpdate.setDone(false);
         cellUpdate.setDeviceKey(Key.create(CellDevice.class, cellUpdate.deviceId));
         ofy().save().entity(cellUpdate).now();
+    }
+
+    @ApiMethod(
+            name = "cellupdate.contribute",
+            path = "cellupdate/contribute",
+            httpMethod = ApiMethod.HttpMethod.POST
+    )
+    public void contributeCellUpdate(@Nullable @Named("minTime") Long minTime, @Nullable @Named("maxTime") Long maxTime) throws UnsupportedEncodingException, MessagingException {
+        Query<CellUpdate> query = ofy().load().type(CellUpdate.class);
+        if (minTime != null) {
+            query = query.filter("timestamp >=", minTime);
+        }
+        if (maxTime != null) {
+            query = query.filter("timestamp <=", maxTime);
+        }
+        JSONMeasurements jsonMeasurements = new JSONMeasurements();
+        for (CellUpdate cellUpdate : query.iterable()) {
+            if (cellUpdate.getLatitude() != null && cellUpdate.getLongitude() != null) {
+                JSONCellUpdate jsonCellUpdate = new JSONCellUpdate();
+                jsonCellUpdate.lon = cellUpdate.getLongitude();
+                jsonCellUpdate.lat = cellUpdate.getLatitude();
+                jsonCellUpdate.mcc = cellUpdate.getMcc();
+                jsonCellUpdate.mnc = cellUpdate.getMnc();
+                jsonCellUpdate.tac = cellUpdate.getTac();
+                jsonCellUpdate.cellid = cellUpdate.getCi();
+                jsonCellUpdate.measuredAt = cellUpdate.getTimestamp();
+                jsonMeasurements.measurements.add(jsonCellUpdate);
+            }
+        }
+        javax.mail.Message msg = new MimeMessage(Session.getDefaultInstance(new Properties()));
+        msg.setFrom(new InternetAddress("michael.zilske@gmail.com", "Michael Zilske"));
+        msg.addRecipient(javax.mail.Message.RecipientType.TO, new InternetAddress("michael.zilske@gmail.com", "Michael Zilske"));
+        msg.setSubject("Your Example.com account has been activated");
+        msg.setText("wurst");
+        Multipart mp = new MimeMultipart();
+        Gson gson = new Gson();
+        MimeBodyPart part = new MimeBodyPart();
+        part.setFileName("cellupdates-"+minTime+"-"+maxTime+".json");
+        part.setContent(gson.toJson(jsonMeasurements), "application/json");
+        mp.addBodyPart(part);
+        msg.setContent(mp);
+        Transport.send(msg);
+    }
+
+    static class JSONMeasurements {
+        List<JSONCellUpdate> measurements = new ArrayList<>();
+    }
+
+    static class JSONCellUpdate {
+        double lon;
+        double lat;
+        int mcc;
+        int mnc;
+        int tac;
+        int cellid;
+        long measuredAt;
+        String act = "LTE";
     }
 
     @ApiMethod(
