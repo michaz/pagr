@@ -176,8 +176,8 @@ public class RoutesGeoJSONServlet extends HttpServlet {
     }
 
     static class JSONCellTower {
-        double lon;
-        double lat;
+        Double lon;
+        Double lat;
         int mcc;
         int mnc;
         int lac;
