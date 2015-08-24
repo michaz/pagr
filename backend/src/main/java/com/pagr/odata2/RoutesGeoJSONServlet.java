@@ -143,8 +143,10 @@ public class RoutesGeoJSONServlet extends HttpServlet {
                     }
                     JSONCellTowerFeature feature = new JSONCellTowerFeature();
                     feature.properties = result;
-                    feature.geometry = new JSONPoint();
-                    feature.geometry.coordinates = new double[]{result.lon,result.lat};
+                    if (result.lon != null && result.lat != null) {
+                        feature.geometry = new JSONPoint();
+                        feature.geometry.coordinates = new double[]{result.lon,result.lat};
+                    }
                     Cache cache = CacheManager.getInstance().getCacheFactory().createCache(Collections.emptyMap());
                     String value = gson.toJson(feature);
                     log.info("Caching: "+ cellKeyJSON + " ------> " + value);

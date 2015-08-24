@@ -7,6 +7,7 @@ import com.googlecode.objectify.VoidWork;
 import com.pagr.backend.CellDevice;
 import com.pagr.backend.CellUpdate;
 import com.pagr.backend.LinkPassage;
+import com.pagr.backend.PagrEndpoint;
 
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -20,6 +21,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.logging.Logger;
 
+import javax.mail.MessagingException;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
@@ -99,6 +101,12 @@ public class MapMatchServlet extends HttpServlet {
         }
         for (CellUpdate cellUpdate : cellUpdates) {
             cellUpdate.setDone(true);
+        }
+        String filename = "cellupdates.json";
+        try {
+            PagrEndpoint.mailJSONCellUpdates(cellUpdates, filename);
+        } catch (MessagingException e) {
+            throw new RuntimeException(e);
         }
         ofy().save().entities(cellUpdates).now();
     }

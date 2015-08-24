@@ -10,38 +10,35 @@ import com.google.android.gcm.server.Constants;
 import com.google.android.gcm.server.Message;
 import com.google.android.gcm.server.Result;
 import com.google.android.gcm.server.Sender;
+import com.google.api.client.extensions.appengine.http.UrlFetchTransport;
+import com.google.api.client.http.ByteArrayContent;
+import com.google.api.client.http.GenericUrl;
+import com.google.api.client.http.HttpHeaders;
+import com.google.api.client.http.HttpMediaType;
+import com.google.api.client.http.MultipartContent;
 import com.google.api.server.spi.config.Api;
 import com.google.api.server.spi.config.ApiMethod;
 import com.google.api.server.spi.config.ApiNamespace;
 import com.google.api.server.spi.response.CollectionResponse;
+import com.google.appengine.api.datastore.QueryResultIterable;
 import com.google.appengine.api.taskqueue.Queue;
 import com.google.appengine.api.taskqueue.QueueFactory;
 import com.google.appengine.api.taskqueue.TaskOptions;
-import com.google.appengine.repackaged.com.google.gson.Gson;
+import com.google.gson.Gson;
 import com.googlecode.objectify.Key;
 import com.googlecode.objectify.Ref;
-import com.googlecode.objectify.cmd.LoadType;
 import com.googlecode.objectify.cmd.Query;
 
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
-import java.util.Properties;
 import java.util.logging.Logger;
 
 import javax.annotation.Nullable;
 import javax.inject.Named;
 import javax.mail.MessagingException;
-import javax.mail.Multipart;
-import javax.mail.Session;
-import javax.mail.Transport;
-import javax.mail.internet.InternetAddress;
-import javax.mail.internet.MimeBodyPart;
-import javax.mail.internet.MimeMessage;
-import javax.mail.internet.MimeMultipart;
 
 import static com.pagr.backend.OfyService.ofy;
 
@@ -99,7 +96,7 @@ public class PagrEndpoint {
             path = "cellupdate/contribute",
             httpMethod = ApiMethod.HttpMethod.POST
     )
-    public void contributeCellUpdate(@Nullable @Named("minTime") Long minTime, @Nullable @Named("maxTime") Long maxTime) throws UnsupportedEncodingException, MessagingException {
+    public void contributeCellUpdate(@Nullable @Named("minTime") Long minTime, @Nullable @Named("maxTime") Long maxTime) throws IOException, MessagingException {
         Query<CellUpdate> query = ofy().load().type(CellUpdate.class);
         if (minTime != null) {
             query = query.filter("timestamp >=", minTime);
@@ -107,8 +104,14 @@ public class PagrEndpoint {
         if (maxTime != null) {
             query = query.filter("timestamp <=", maxTime);
         }
+        QueryResultIterable<CellUpdate> resultIterable = query.iterable();
+        String filename = "cellupdates-" + minTime + "-" + maxTime + ".json";
+        mailJSONCellUpdates(resultIterable, filename);
+    }
+
+    public static void mailJSONCellUpdates(Iterable<CellUpdate> resultIterable, String filename) throws MessagingException, IOException {
         JSONMeasurements jsonMeasurements = new JSONMeasurements();
-        for (CellUpdate cellUpdate : query.iterable()) {
+        for (CellUpdate cellUpdate : resultIterable) {
             if (cellUpdate.getLatitude() != null && cellUpdate.getLongitude() != null) {
                 JSONCellUpdate jsonCellUpdate = new JSONCellUpdate();
                 jsonCellUpdate.lon = cellUpdate.getLongitude();
@@ -121,19 +124,23 @@ public class PagrEndpoint {
                 jsonMeasurements.measurements.add(jsonCellUpdate);
             }
         }
-        javax.mail.Message msg = new MimeMessage(Session.getDefaultInstance(new Properties()));
-        msg.setFrom(new InternetAddress("michael.zilske@gmail.com", "Michael Zilske"));
-        msg.addRecipient(javax.mail.Message.RecipientType.TO, new InternetAddress("michael.zilske@gmail.com", "Michael Zilske"));
-        msg.setSubject("Your Example.com account has been activated");
-        msg.setText("wurst");
-        Multipart mp = new MimeMultipart();
         Gson gson = new Gson();
-        MimeBodyPart part = new MimeBodyPart();
-        part.setFileName("cellupdates-"+minTime+"-"+maxTime+".json");
-        part.setContent(gson.toJson(jsonMeasurements), "application/json");
-        mp.addBodyPart(part);
-        msg.setContent(mp);
-        Transport.send(msg);
+        MultipartContent content = new MultipartContent().setMediaType(new HttpMediaType("multipart/form-data").setParameter("boundary", "__END_OF_PART__"));
+        MultipartContent.Part part1 = new MultipartContent.Part(new ByteArrayContent(null, "9cdca40d-d27f-4917-8d7d-9bb361416217".getBytes()));
+        part1.setHeaders(new HttpHeaders().set("Content-Disposition", String.format("form-data; name=\"%s\"", "key")));
+        content.addPart(part1);
+        ByteArrayContent fileContent = new ByteArrayContent("application/json", gson.toJson(jsonMeasurements).getBytes());
+        MultipartContent.Part part2 = new MultipartContent.Part(fileContent);
+        part2.setHeaders(new HttpHeaders().set("Content-Disposition", String.format("form-data; name=\"datafile\"; filename=\"%s\"", filename)));
+        content.addPart(part2);
+        com.google.api.client.http.HttpResponse response = UrlFetchTransport.getDefaultInstance().createRequestFactory().buildPostRequest(new GenericUrl("http://opencellid.org/measure/uploadJson"), content)
+                .execute();
+        log.info(convertStreamToString(response.getContent()));
+    }
+
+    static String convertStreamToString(java.io.InputStream is) {
+        java.util.Scanner s = new java.util.Scanner(is).useDelimiter("\\A");
+        return s.hasNext() ? s.next() : "";
     }
 
     static class JSONMeasurements {
